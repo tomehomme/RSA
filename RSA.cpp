@@ -4,32 +4,32 @@
 #include <string>
 #include <cmath>
 
-
 using namespace std;
-
 
 void encryption(int n, int e);
 void decryption(int n, int e, int phi);
 
-// simple gcd algorithm
+// euclidean gcd algorithm
 int gcd(int a,int b){
-    if (b == 0){ 
+    if (b == a){ 
         return a;
     } 
-    else{ 
-        return gcd(b,a%b);
-    } 
+    if (a < b){
+        swap(a,b);
+    }
+    return gcd(a-b,b);
 }
+
 // check for p and q prime
 bool isPrime(int num){
-    bool flag=true;
-    for(int i = 2; i <= num / 2; i++) {
+    bool prime = true;
+    for(int i = 2; i <= sqrt(num); i++) {
        if(num % i == 0) {
-          flag = false;
-          break;
+        //    if num % i == 0 this means that i is a factor of num
+          return false;
        }
     }
-    return flag;
+    return prime;
 }
 
 // Breaks RSA - determines p and q, given n
@@ -37,9 +37,12 @@ int Phi (int n){
     int p = 1;
     int q = 1;
     for(int i = 2; i <= n; ++i){
+        // if i is a factor of n, and i is prime
             if(n % i == 0 && isPrime(i)){
                 p = i;
-                q = n/p; 
+                q = n/p;
+                // exit out of loop, because found p and q
+                break;
             }    
     }
     // calculate phi
@@ -76,7 +79,7 @@ string lettersToNum(string filename){
     return outfile;
 }
 
-// turns schema numbers into message letters
+// turns schema numbers into message letters, using the same schema as Homework 2
 void numtoLetters(string filename){
     ifstream inputs;
     inputs.open(filename);
@@ -136,14 +139,16 @@ int main(){
     cout << "Enter the value of 'n': " << endl;
     int n = 0;
     cin >> n;
+    cout << "n: " << n << endl;
     int phi = Phi(n);
-    cout << phi << endl;
+    // cout << phi << endl;
 
     cout << "Enter the value of 'e', the encryption key (e must be coprime to phi(n)): " << endl;
     int e = 2;
     cin >> e;
-    cout << e << endl;
+    cout << "e: " << e << endl;
     
+    // check to see if e is coprime to phi
     while (gcd(e,phi) != 1){
         cout << "Enter the value of 'e', the encryption key (e must be coprime to phi(n)): " << endl;
         cin >> e;
@@ -234,15 +239,27 @@ void decryption( int n, int e, int phi){
  
 
     //calculate d, the inverse of e
-    // using fermat's little theorem, e^phi-2 mod phi = d
-    long long d = e;
+    // using fermat's little theorem, by enumerating multiples
+    long long d = 1;
     cout << "e: " << e << endl;
-    for (int i = 0; i < phi-2; i++){
-        d *= e;
-        // cout << d << endl;
-        d %= phi;
+    bool foundInverse = false;
+    int k = 1;
+    cout << "phi: " << phi << endl;
+    while (!foundInverse){
+        // enumerate multiples until ed = phi*k+1
+        if (e*d == (phi*k+1)){
+            foundInverse = true;
+        } else if (e*d > (phi*k+1)){
+            k++;
+        } else {
+            d++;
+        }
     }
-    cout << "d: " << d << endl;
+    // for (int i = 0; i < phi; i++){
+    //     d *= e;
+    //     // cout << d << endl;
+    //     d %= phi;
+    // }
     cout << "inverse: " << d << endl;
 
 
